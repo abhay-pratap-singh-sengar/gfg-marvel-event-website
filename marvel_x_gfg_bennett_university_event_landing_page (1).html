@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVENGERS: CODE INITIATIVE | GFG Bennett University</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        starkRed: '#ff2a2a',
+                        starkGold: '#f59e0b',
+                        arcBlue: '#00f0ff',
+                        darkBg: '#05050a',
+                        cardDark: '#0b0f19',
+                    },
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        inter: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background-color: #05050a;
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .hud-border {
+            position: relative;
+        }
+        .hud-border::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 10px; height: 10px;
+            border-top: 2px solid #00f0ff;
+            border-left: 2px solid #00f0ff;
+        }
+        .hud-border::after {
+            content: '';
+            position: absolute;
+            bottom: 0; right: 0; width: 10px; height: 10px;
+            border-bottom: 2px solid #00f0ff;
+            border-right: 2px solid #00f0ff;
+        }
+
+        .glow-arc {
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.3), inset 0 0 15px rgba(0, 240, 255, 0.2);
+        }
+
+        .glow-gold {
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.3);
+        }
+
+        .glow-red {
+            box-shadow: 0 0 25px rgba(255, 42, 42, 0.3);
+        }
+
+        .glass-panel {
+            background: rgba(11, 15, 25, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 240, 255, 0.15);
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(0, 240, 255, 0.4);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #05050a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f0ff;
+        }
+
+        /* Canvas Background */
+        #hud-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 0, 0, 0.3) 50%,
+                rgba(0, 0, 0, 0.3)
+            );
+            background-size: 100% 4px;
+        }
+    </style>
+</head>
+<body class="relative selection:bg-arcBlue selection:text-darkBg">
+
+    <canvas id="hud-canvas"></canvas>
+
+    <!-- Navigation Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-white/10 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="relative w-10 h-10 rounded-full flex items-center justify-center glow-arc bg-cardDark border border-arcBlue/50">
+                    <i class="fa-solid fa-atom text-arcBlue animate-spin" style="animation-duration: 8s;"></i>
+                </div>
+                <div>
+                    <span class="font-orbitron font-extrabold tracking-wider text-lg text-white block">STARK x GFG</span>
+                    <span class="text-[10px] font-mono text-arcBlue tracking-widest uppercase">Bennett University</span>
+                </div>
+            </div>
+
+            <!-- Desktop Nav Links -->
+            <nav class="hidden md:flex items-center space-x-8 font-orbitron text-xs tracking-widest">
+                <a href="#about" class="text-gray-300 hover:text-arcBlue transition-colors">01 // ABOUT</a>
+                <a href="#tracks" class="text-gray-300 hover:text-arcBlue transition-colors">02 // TRACKS</a>
+                <a href="#timeline" class="text-gray-300 hover:text-arcBlue transition-colors">03 // TIMELINE</a>
+                <a href="#jarvis" class="text-gray-300 hover:text-arcBlue transition-colors">04 // JARVIS AI</a>
+            </nav>
+
+            <div class="flex items-center space-x-4">
+                <a href="#register" class="hidden sm:inline-flex items-center space-x-2 px-5 py-2.5 rounded font-orbitron text-xs font-bold tracking-widest text-darkBg bg-arcBlue hover:bg-white transition-all glow-arc shadow-lg">
+                    <span>INITIATE PROTOCOL</span>
+                    <i class="fa-solid fa-bolt"></i>
+                </a>
+                <button id="mobile-menu-btn" class="md:hidden text-arcBlue text-xl p-2 focus:outline-none">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden glass-panel border-b border-arcBlue/20 px-6 py-4 space-y-3 font-orbitron text-xs">
+            <a href="#about" class="block text-gray-300 hover:text-arcBlue py-2">01 // ABOUT</a>
+            <a href="#tracks" class="block text-gray-300 hover:text-arcBlue py-2">02 // TRACKS</a>
+            <a href="#timeline" class="block text-gray-300 hover:text-arcBlue py-2">03 // TIMELINE</a>
+            <a href="#jarvis" class="block text-gray-300 hover:text-arcBlue py-2">04 // JARVIS AI</a>
+            <a href="#register" class="block text-center w-full py-2.5 bg-arcBlue text-darkBg font-bold rounded">INITIATE PROTOCOL</a>
+        </div>
+    </header>
+
+    <section class="relative min-h-screen flex items-center justify-center pt-28 pb-16 px-4 sm:px-6 lg:px-8 z-10">
+        <div class="absolute inset-0 scanlines pointer-events-none opacity-30"></div>
+        <div class="max-w-6xl mx-auto text-center relative z-10">
+            
+            <!-- Top Tagline -->
+            <div class="inline-flex items-center space-x-3 px-4 py-1.5 rounded-full glass-panel border border-arcBlue/30 mb-8 animate-pulse">
+                <span class="w-2 h-2 rounded-full bg-arcBlue"></span>
+                <span class="font-orbitron text-xs text-arcBlue tracking-widest">GEEKSFORGEEKS STUDENT CHAPTER × BENNETT UNIVERSITY</span>
+            </div>
+
+            <!-- Main Title -->
+            <h1 class="font-orbitron font-black text-4xl sm:text-6xl lg:text-7xl tracking-wider text-white mb-6 uppercase">
+                AVENGERS: <span class="text-transparent bg-clip-text bg-gradient-to-r from-arcBlue via-indigo-400 to-starkRed">CODE INITIATIVE</span>
+            </h1>
+
+            <p class="font-inter text-gray-300 max-w-2xl mx-auto text-base sm:text-lg mb-10 leading-relaxed font-light">
+                Step into Stark Industries' most advanced quantum simulation. Assemble your squad, engineer bleeding-edge solutions, and defend the digital multiverse in Bennett University's flagship tech symposium.
+            </p>
+
+            <!-- Live Countdown Timer -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-xl mx-auto mb-12">
+                <div class="glass-panel p-4 rounded-xl hud-border">
+                    <div id="days" class="font-orbitron text-3xl sm:text-4xl font-bold text-arcBlue">00</div>
+                    <div class="font-mono text-[10px] text-gray-400 tracking-widest mt-1">DAYS</div>
+                </div>
+                <div class="glass-panel p-4 rounded-xl hud-border">
+                    <div id="hours" class="font-orbitron text-3xl sm:text-4xl font-bold text-starkGold">00</div>
+                    <div class="font-mono text-[10px] text-gray-400 tracking-widest mt-1">HOURS</div>
+                </div>
+                <div class="glass-panel p-4 rounded-xl hud-border">
+                    <div id="minutes" class="font-orbitron text-3xl sm:text-4xl font-bold text-starkRed">00</div>
+                    <div class="font-mono text-[10px] text-gray-400 tracking-widest mt-1">MINUTES</div>
+                </div>
+                <div class="glass-panel p-4 rounded-xl hud-border">
+                    <div id="seconds" class="font-orbitron text-3xl sm:text-4xl font-bold text-white">00</div>
+                    <div class="font-mono text-[10px] text-gray-400 tracking-widest mt-1">SECONDS</div>
+                </div>
+            </div>
+
+            <p class="text-xs font-mono text-arcBlue mb-8 tracking-widest uppercase">DEADLINE: OCTOBER 15, 2026 — 12:00 AM (MIDNIGHT)</p>
+
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="#register" class="w-full sm:w-auto px-8 py-4 rounded font-orbitron font-bold text-sm tracking-widest bg-gradient-to-r from-arcBlue to-indigo-600 text-darkBg hover:from-white hover:to-arcBlue transition-all transform hover:-translate-y-1 glow-arc flex items-center justify-center space-x-3">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>JOIN THE INITIATIVE</span>
+                </a>
+                <a href="#tracks" class="w-full sm:w-auto px-8 py-4 rounded font-orbitron font-bold text-sm tracking-widest glass-panel text-white hover:border-arcBlue transition-all transform hover:-translate-y-1 flex items-center justify-center space-x-3">
+                    <i class="fa-solid fa-compass text-arcBlue"></i>
+                    <span>EXPLORE TRACKS</span>
+                </a>
+            </div>
+
+            <!-- System Diagnostic Bar -->
+            <div class="mt-16 pt-8 border-t border-white/10 flex flex-wrap items-center justify-center gap-8 font-mono text-xs text-gray-400">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-ping"></span>
+                    <span>JARVIS AI: ONLINE</span>
+                </div>
+                <div>SECURE LINK: STARK-NET v4.8</div>
+                <div>LOCATION: BENNETT UNIV LABS</div>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="about" class="py-24 relative z-10 bg-gradient-to-b from-transparent via-cardDark/50 to-transparent">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                
+                <div>
+                    <div class="inline-flex items-center space-x-2 px-3 py-1 rounded bg-arcBlue/10 border border-arcBlue/30 text-arcBlue font-mono text-xs mb-4">
+                        <i class="fa-solid fa-code"></i>
+                        <span>CONCEPT BRIEFING</span>
+                    </div>
+                    <h2 class="font-orbitron font-bold text-3xl sm:text-4xl text-white mb-6 leading-snug">
+                        ENGINEERING THE FUTURE <span class="text-arcBlue">BEYOND EARTH'S LIMITS</span>
+                    </h2>
+                    <p class="font-inter text-gray-300 leading-relaxed mb-6 font-light">
+                        Organized by the GeeksForGeeks Student Chapter at Bennett University, the <strong class="text-white font-medium">Avengers: Code Initiative</strong> is a high-octane 36-hour technical marathon. Designed for master coders, masterminds, and visionaries, this event merges Marvel's cinematic ambition with real-world computer science and engineering challenges.
+                    </p>
+                    <div class="grid grid-cols-2 gap-6 pt-4">
+                        <div class="glass-panel p-5 rounded-xl border-l-4 border-arcBlue">
+                            <h3 class="font-orbitron text-2xl font-bold text-white mb-1">₹5,00,000+</h3>
+                            <p class="text-xs text-gray-400 font-mono">BOUNTY & PRIZE POOL</p>
+                        </div>
+                        <div class="glass-panel p-5 rounded-xl border-l-4 border-starkGold">
+                            <h3 class="font-orbitron text-2xl font-bold text-white mb-1">36 HOURS</h3>
+                            <p class="text-xs text-gray-400 font-mono">NON-STOP HACKATHON</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Stark Core Graphic -->
+                <div class="relative flex items-center justify-center p-8">
+                    <div class="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full border border-arcBlue/20 animate-spin" style="animation-duration: 25s;"></div>
+                    <div class="absolute w-56 h-56 sm:w-72 sm:h-72 rounded-full border border-dashed border-starkGold/40 animate-spin" style="animation-duration: 15s; animation-direction: reverse;"></div>
+                    
+                    <div class="relative w-48 h-48 sm:w-60 sm:h-60 rounded-full glass-panel flex flex-col items-center justify-center glow-arc p-6 text-center">
+                        <i class="fa-solid fa-atom text-5xl text-arcBlue mb-3 animate-bounce"></i>
+                        <span class="font-orbitron text-xs font-bold text-white tracking-widest">STARK ARC REACTOR</span>
+                        <span class="text-[10px] font-mono text-arcBlue mt-1">CORE OUTPUT: 100%</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="tracks" class="py-24 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="font-mono text-xs text-arcBlue tracking-widest uppercase block mb-3">02 // DEPLOYMENT DOMAINS</span>
+                <h2 class="font-orbitron font-extrabold text-3xl sm:text-5xl text-white uppercase mb-4">
+                    CHOOSE YOUR <span class="text-starkGold">BATTLEFIELD</span>
+                </h2>
+                <p class="text-gray-400 font-inter text-sm sm:text-base">
+                    Select your domain of expertise. Each track simulates critical cosmic scenarios engineered to test your grit, speed, and creative genius.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                
+                <!-- Track 1: Code-Vengers -->
+                <div class="glass-panel rounded-2xl p-6 relative group transition-all duration-300 hover:-translate-y-2 hover:border-arcBlue">
+                    <div class="absolute top-4 right-4 text-arcBlue font-mono text-xs opacity-50">#TRK-01</div>
+                    <div class="w-14 h-14 rounded-xl bg-arcBlue/10 flex items-center justify-center text-arcBlue text-2xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-terminal"></i>
+                    </div>
+                    <h3 class="font-orbitron font-bold text-xl text-white mb-3">CODE-VENGERS</h3>
+                    <p class="text-gray-400 text-xs sm:text-sm font-light mb-6 leading-relaxed">
+                        The ultimate hackathon challenge. Build scalable web3, AI, or cloud applications to solve planetary-scale crises.
+                    </p>
+                    <div class="flex items-center justify-between pt-4 border-t border-white/10 text-xs font-mono">
+                        <span class="text-arcBlue">TEAM: 2-4 MEMBERS</span>
+                        <span class="text-gray-300">36 HRS</span>
+                    </div>
+                </div>
+
+                <!-- Track 2: Infinity Design -->
+                <div class="glass-panel rounded-2xl p-6 relative group transition-all duration-300 hover:-translate-y-2 hover:border-starkGold">
+                    <div class="absolute top-4 right-4 text-starkGold font-mono text-xs opacity-50">#TRK-02</div>
+                    <div class="w-14 h-14 rounded-xl bg-starkGold/10 flex items-center justify-center text-starkGold text-2xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <h3 class="font-orbitron font-bold text-xl text-white mb-3">INFINITY DESIGN</h3>
+                    <p class="text-gray-400 text-xs sm:text-sm font-light mb-6 leading-relaxed">
+                        UI/UX arena where aesthetics meet absolute precision. Craft futuristic immersive interfaces and AR/VR experiences.
+                    </p>
+                    <div class="flex items-center justify-between pt-4 border-t border-white/10 text-xs font-mono">
+                        <span class="text-starkGold">SOLO / DUO</span>
+                        <span class="text-gray-300">12 HRS</span>
+                    </div>
+                </div>
+
+                <!-- Track 3: Quantum Trivia -->
+                <div class="glass-panel rounded-2xl p-6 relative group transition-all duration-300 hover:-translate-y-2 hover:border-starkRed">
+                    <div class="absolute top-4 right-4 text-starkRed font-mono text-xs opacity-50">#TRK-03</div>
+                    <div class="w-14 h-14 rounded-xl bg-starkRed/10 flex items-center justify-center text-starkRed text-2xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <h3 class="font-orbitron font-bold text-xl text-white mb-3">QUANTUM TRIVIA</h3>
+                    <p class="text-gray-400 text-xs sm:text-sm font-light mb-6 leading-relaxed">
+                        A high-speed tech and Marvel cinematic universe quiz testing deep algorithmic knowledge and pop culture lore.
+                    </p>
+                    <div class="flex items-center justify-between pt-4 border-t border-white/10 text-xs font-mono">
+                        <span class="text-starkRed">SOLO</span>
+                        <span class="text-gray-300">2 HRS</span>
+                    </div>
+                </div>
+
+                <!-- Track 4: Multiverse Gaming -->
+                <div class="glass-panel rounded-2xl p-6 relative group transition-all duration-300 hover:-translate-y-2 hover:border-indigo-400">
+                    <div class="absolute top-4 right-4 text-indigo-400 font-mono text-xs opacity-50">#TRK-04</div>
+                    <div class="w-14 h-14 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-2xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-gamepad"></i>
+                    </div>
+                    <h3 class="font-orbitron font-bold text-xl text-white mb-3">MULTIVERSE GAMING</h3>
+                    <p class="text-gray-400 text-xs sm:text-sm font-light mb-6 leading-relaxed">
+                        High-stakes esports tournament featuring competitive tactical shooter and strategy showdowns for ultimate supremacy.
+                    </p>
+                    <div class="flex items-center justify-between pt-4 border-t border-white/10 text-xs font-mono">
+                        <span class="text-indigo-400">SQUAD (5 PAX)</span>
+                        <span class="text-gray-300">24 HRS</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="timeline" class="py-24 relative z-10 bg-cardDark/40">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="font-mono text-xs text-arcBlue tracking-widest uppercase block mb-3">03 // MISSION CHRONOLOGY</span>
+                <h2 class="font-orbitron font-extrabold text-3xl sm:text-5xl text-white uppercase mb-4">
+                    EVENT <span class="text-arcBlue">TIMELINE</span>
+                </h2>
+                <p class="text-gray-400 font-inter text-sm sm:text-base">
+                    From zero hour inauguration to the grand closing ceremony, track every phase of the event sequence.
+                </p>
+            </div>
+
+            <div class="relative border-l border-arcBlue/30 ml-4 sm:ml-32 space-y-12">
+                
+                <!-- Timeline Item 1 -->
+                <div class="relative pl-8 sm:pl-12">
+                    <div class="absolute -left-[17px] top-1.5 w-8 h-8 rounded-full bg-darkBg border-2 border-arcBlue flex items-center justify-center text-arcBlue text-xs font-bold glow-arc">01</div>
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <span class="font-mono text-xs text-arcBlue mb-1 block">DAY 1 | 09:00 AM</span>
+                        <h3 class="font-orbitron font-bold text-xl text-white mb-2">INITIATION & KEYNOTE</h3>
+                        <p class="text-gray-300 text-sm font-light">
+                            Grand opening ceremony at Bennett University auditorium. Special address by tech industry leaders and unveiling of problem statements.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Timeline Item 2 -->
+                <div class="relative pl-8 sm:pl-12">
+                    <div class="absolute -left-[17px] top-1.5 w-8 h-8 rounded-full bg-darkBg border-2 border-starkGold flex items-center justify-center text-starkGold text-xs font-bold glow-gold">02</div>
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <span class="font-mono text-xs text-starkGold mb-1 block">DAY 1 | 11:30 AM</span>
+                        <h3 class="font-orbitron font-bold text-xl text-white mb-2">HACKATHON & TRACKS KICKOFF</h3>
+                        <p class="text-gray-300 text-sm font-light">
+                            Coding begins across all tracks. Mentorship sessions commence with industry experts guiding teams through architectural challenges.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Timeline Item 3 -->
+                <div class="relative pl-8 sm:pl-12">
+                    <div class="absolute -left-[17px] top-1.5 w-8 h-8 rounded-full bg-darkBg border-2 border-starkRed flex items-center justify-center text-starkRed text-xs font-bold glow-red">03</div>
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <span class="font-mono text-xs text-starkRed mb-1 block">DAY 2 | 02:00 PM</span>
+                        <h3 class="font-orbitron font-bold text-xl text-white mb-2">FINAL EVALUATION & PITCHING</h3>
+                        <p class="text-gray-300 text-sm font-light">
+                            Submissions freeze. Teams pitch their working prototypes to our esteemed panel of Stark-level judges and venture capitalists.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Timeline Item 4 -->
+                <div class="relative pl-8 sm:pl-12">
+                    <div class="absolute -left-[17px] top-1.5 w-8 h-8 rounded-full bg-darkBg border-2 border-green-400 flex items-center justify-center text-green-400 text-xs font-bold">04</div>
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <span class="font-mono text-xs text-green-400 mb-1 block">DAY 2 | 06:00 PM</span>
+                        <h3 class="font-orbitron font-bold text-xl text-white mb-2">AWARD CEREMONY & CLOSING</h3>
+                        <p class="text-gray-300 text-sm font-light">
+                            Winners announced, bounty prizes distributed, and closing remarks by the GeeksForGeeks Student Chapter faculty advisors.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <section id="jarvis" class="py-24 relative z-10">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="text-center mb-10">
+                <span class="font-mono text-xs text-arcBlue tracking-widest uppercase block mb-3">04 // INTERACTIVE INTERFACE</span>
+                <h2 class="font-orbitron font-extrabold text-3xl sm:text-4xl text-white uppercase mb-3">
+                    JARVIS <span class="text-arcBlue">TERMINAL</span>
+                </h2>
+                <p class="text-gray-400 font-inter text-sm">
+                    Interact directly with Stark Industries AI assistant. Type commands or click shortcuts below.
+                </p>
+            </div>
+
+            <!-- Terminal Window -->
+            <div class="glass-panel rounded-2xl overflow-hidden border border-arcBlue/30 shadow-2xl">
+                <!-- Terminal Header -->
+                <div class="bg-cardDark px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+                        <span class="font-mono text-xs text-gray-400 ml-2">jarvis@stark-net:~</span>
+                    </div>
+                    <span class="font-mono text-[10px] text-arcBlue">SECURE PROTOCOL v4.8</span>
+                </div>
+
+                <!-- Terminal Body -->
+                <div id="terminal-body" class="p-6 font-mono text-xs sm:text-sm h-72 overflow-y-auto space-y-3 text-gray-300">
+                    <div class="text-arcBlue">[JARVIS]: Initializing Stark Net protocol... Welcome, User.</div>
+                    <div class="text-gray-400">[JARVIS]: Type <span class="text-starkGold">'help'</span> to view available system commands or click the buttons below.</div>
+                </div>
+
+                <!-- Quick Command Buttons -->
+                <div class="px-6 py-3 bg-cardDark/50 border-t border-white/10 flex flex-wrap gap-2">
+                    <button onclick="runCommand('help')" class="px-3 py-1.5 rounded bg-arcBlue/10 text-arcBlue hover:bg-arcBlue hover:text-darkBg transition-all text-xs font-mono">help</button>
+                    <button onclick="runCommand('status')" class="px-3 py-1.5 rounded bg-starkGold/10 text-starkGold hover:bg-starkGold hover:text-darkBg transition-all text-xs font-mono">status</button>
+                    <button onclick="runCommand('tracks')" class="px-3 py-1.5 rounded bg-indigo-500/10 text-indigo-400 hover:bg-indigo-400 hover:text-darkBg transition-all text-xs font-mono">tracks</button>
+                    <button onclick="runCommand('register')" class="px-3 py-1.5 rounded bg-starkRed/10 text-starkRed hover:bg-starkRed hover:text-white transition-all text-xs font-mono">register</button>
+                    <button onclick="runCommand('easteregg')" class="px-3 py-1.5 rounded bg-purple-500/10 text-purple-400 hover:bg-purple-400 hover:text-white transition-all text-xs font-mono">protocol 10</button>
+                </div>
+
+                <!-- Terminal Input -->
+                <div class="p-4 bg-cardDark border-t border-white/10 flex items-center">
+                    <span class="text-arcBlue font-mono mr-2">&gt;</span>
+                    <input type="text" id="terminal-input" placeholder="Type command here (e.g., help, status)..." class="w-full bg-transparent font-mono text-xs sm:text-sm text-white focus:outline-none" onkeypress="handleTerminalInput(event)">
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="register" class="py-24 relative z-10 bg-gradient-to-t from-cardDark/50 to-transparent">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="glass-panel p-8 sm:p-12 rounded-3xl border border-arcBlue/40 relative overflow-hidden shadow-2xl">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-arcBlue/5 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="text-center mb-10">
+                    <span class="font-mono text-xs text-arcBlue tracking-widest uppercase block mb-2">AVENGERS INITIATIVE</span>
+                    <h2 class="font-orbitron font-black text-3xl sm:text-4xl text-white uppercase">
+                        SECURE YOUR <span class="text-transparent bg-clip-text bg-gradient-to-r from-arcBlue to-starkGold">SLOT</span>
+                    </h2>
+                    <p class="text-gray-400 font-inter text-sm mt-2">
+                        Fill out your credentials below to register for the GFG Bennett University Flagship Event.
+                    </p>
+                </div>
+
+                <!-- Registration Form -->
+                <form id="reg-form" onsubmit="handleRegistration(event)" class="space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block font-orbitron text-xs text-gray-300 mb-2">FULL NAME</label>
+                            <input type="text" id="reg-name" required placeholder="Tony Stark" class="w-full bg-darkBg border border-white/10 rounded-lg px-4 py-3 font-inter text-sm text-white focus:border-arcBlue focus:outline-none transition-colors">
+                        </div>
+                        <div>
+                            <label class="block font-orbitron text-xs text-gray-300 mb-2">BENNETT EMAIL</label>
+                            <input type="email" id="reg-email" required placeholder="e2xxbtcxxx@bennett.edu.in" class="w-full bg-darkBg border border-white/10 rounded-lg px-4 py-3 font-inter text-sm text-white focus:border-arcBlue focus:outline-none transition-colors">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block font-orbitron text-xs text-gray-300 mb-2">STUDENT ID / ENROLLMENT</label>
+                            <input type="text" id="reg-id" required placeholder="E22CSEUXXXX" class="w-full bg-darkBg border border-white/10 rounded-lg px-4 py-3 font-inter text-sm text-white focus:border-arcBlue focus:outline-none transition-colors">
+                        </div>
+                        <div>
+                            <label class="block font-orbitron text-xs text-gray-300 mb-2">SELECT TRACK</label>
+                            <select id="reg-track" class="w-full bg-darkBg border border-white/10 rounded-lg px-4 py-3 font-inter text-sm text-white focus:border-arcBlue focus:outline-none transition-colors">
+                                <option value="code-vengers">Code-Vengers (Hackathon)</option>
+                                <option value="infinity-design">Infinity Design (UI/UX)</option>
+                                <option value="quantum-trivia">Quantum Trivia (Quiz)</option>
+                                <option value="multiverse-gaming">Multiverse Gaming (Esports)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-orbitron text-xs text-gray-300 mb-2">TEAM NAME (IF APPLICABLE)</label>
+                        <input type="text" id="reg-team" placeholder="Avengers Assembled" class="w-full bg-darkBg border border-white/10 rounded-lg px-4 py-3 font-inter text-sm text-white focus:border-arcBlue focus:outline-none transition-colors">
+                    </div>
+
+                    <button type="submit" class="w-full py-4 rounded-lg font-orbitron font-bold text-sm tracking-widest bg-gradient-to-r from-arcBlue to-indigo-600 text-darkBg hover:from-white hover:to-arcBlue transition-all glow-arc flex items-center justify-center space-x-3">
+                        <i class="fa-solid fa-id-card"></i>
+                        <span>SUBMIT APPLICATION & GENERATE BADGE</span>
+                    </button>
+                </form>
+
+                <!-- Success State Modal / Overlay -->
+                <div id="success-modal" class="hidden absolute inset-0 bg-darkBg/95 backdrop-blur-xl flex flex-col items-center justify-center p-8 text-center animate-fade-in">
+                    <div class="w-20 h-20 rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center text-green-400 text-3xl mb-6 glow-arc">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <h3 class="font-orbitron font-bold text-2xl text-white mb-2">PROTOCOL ACCEPTED!</h3>
+                    <p class="text-gray-300 text-sm font-light max-w-md mb-6">
+                        Welcome to the Avengers Initiative, Agent <span id="badge-name" class="text-arcBlue font-medium"></span>. Your secure pass has been dispatched to your Bennett mail.
+                    </p>
+                    <div class="p-4 rounded-xl glass-panel font-mono text-xs text-gray-400 mb-6">
+                        AGENT ID: <span id="badge-id" class="text-starkGold font-bold"></span> | TRACK: <span id="badge-track" class="text-arcBlue font-bold"></span>
+                    </div>
+                    <button onclick="resetRegistration()" class="px-6 py-2.5 rounded bg-arcBlue text-darkBg font-orbitron text-xs font-bold tracking-widest">
+                        REGISTER ANOTHER AGENT
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-white/10 relative z-10 bg-darkBg text-center">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-center space-x-3 mb-6">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center glow-arc bg-cardDark border border-arcBlue/50">
+                    <i class="fa-solid fa-atom text-arcBlue"></i>
+                </div>
+                <span class="font-orbitron font-bold text-white tracking-wider">GEEKSFORGEEKS STUDENT CHAPTER</span>
+            </div>
+            <p class="text-xs text-gray-400 font-mono mb-4">BENNETT UNIVERSITY • GREATER NOIDA, UTTAR PRADESH</p>
+            <div class="flex items-center justify-center space-x-6 text-gray-400 text-sm mb-6">
+                <a href="#" class="hover:text-arcBlue transition-colors"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#" class="hover:text-arcBlue transition-colors"><i class="fa-brands fa-linkedin"></i></a>
+                <a href="#" class="hover:text-arcBlue transition-colors"><i class="fa-brands fa-discord"></i></a>
+                <a href="#" class="hover:text-arcBlue transition-colors"><i class="fa-brands fa-github"></i></a>
+            </div>
+            <p class="text-[10px] text-gray-600 font-mono">© 2026 GFG STUDENT CHAPTER BENNETT UNIVERSITY. ALL RIGHTS RESERVED. STARK INDUSTRIES PROTOCOL.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Canvas Particle & HUD Grid Animation
+        const canvas = document.getElementById('hud-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let particles = [];
+        for (let i = 0; i < 50; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                radius: Math.random() * 2 + 1
+            });
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.2)';
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.05)';
+
+            particles.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                for (let j = index + 1; j < particles.length; j++) {
+                    let p2 = particles[j];
+                    let dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            });
+
+            requestAnimationFrame(animateCanvas);
+        }
+        animateCanvas();
+
+        // Live Countdown Timer to Midnight EOD
+        // Live Countdown Timer to October 15, 2026 Midnight
+        function updateCountdown() {
+            const now = new Date();
+            const targetDate = new Date('2026-10-15T00:00:00');
+
+            let diff = targetDate - now;
+            if (diff < 0) diff = 0; // Freeze at 0 if past deadline
+
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+            document.getElementById('days').innerText = String(days).padStart(2, '0');
+            document.getElementById('hours').innerText = String(hours).padStart(2, '0');
+            document.getElementById('minutes').innerText = String(minutes).padStart(2, '0');
+            document.getElementById('seconds').innerText = String(seconds).padStart(2, '0');
+        }
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // Jarvis AI Terminal Logic
+        const terminalBody = document.getElementById('terminal-body');
+        const terminalInput = document.getElementById('terminal-input');
+
+        function appendToTerminal(text, colorClass = 'text-gray-300') {
+            const div = document.createElement('div');
+            div.className = colorClass;
+            div.innerHTML = text;
+            terminalBody.appendChild(div);
+            terminalBody.scrollTop = terminalBody.scrollHeight;
+        }
+
+        function runCommand(cmd) {
+            appendToTerminal(`&gt; ${cmd}`, 'text-arcBlue font-semibold');
+            
+            switch(cmd.toLowerCase().trim()) {
+                case 'help':
+                    appendToTerminal("[JARVIS]: Available commands: <br>- <b>status</b>: Check system and reactor integrity<br>- <b>tracks</b>: List all competition domains<br>- <b>register</b>: Jump to registration portal<br>- <b>protocol 10</b>: Initiate clean slate protocol<br>- <b>clear</b>: Clear terminal log");
+                    break;
+                case 'status':
+                    appendToTerminal("[JARVIS]: Reactor Core: 100% | Shield Integrity: Optimal | Bennett University Network: Secured.");
+                    break;
+                case 'tracks':
+                    appendToTerminal("[JARVIS]: 1. Code-Vengers (Hackathon)<br>2. Infinity Design (UI/UX)<br>3. Quantum Trivia<br>4. Multiverse Gaming");
+                    break;
+                case 'register':
+                    appendToTerminal("[JARVIS]: Redirecting to Avengers Initiative Registration Portal...");
+                    window.location.hash = '#register';
+                    break;
+                case 'protocol 10':
+                    appendToTerminal("[JARVIS]: WARNING: Clean slate protocol initiated. Just kidding, everything is secure!", 'text-starkRed font-bold');
+                    break;
+                case 'clear':
+                    terminalBody.innerHTML = '';
+                    break;
+                default:
+                    appendToTerminal(`[JARVIS]: Command not recognized: '${cmd}'. Type 'help' for assistance.`, 'text-starkRed');
+            }
+        }
+
+        function handleTerminalInput(e) {
+            if (e.key === 'Enter') {
+                const val = terminalInput.value.trim();
+                if (val) {
+                    runCommand(val);
+                    terminalInput.value = '';
+                }
+            }
+        }
+
+        // Registration Handling
+        function handleRegistration(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const id = document.getElementById('reg-id').value;
+            const track = document.getElementById('reg-track').value;
+
+            document.getElementById('badge-name').innerText = name;
+            document.getElementById('badge-id').innerText = id;
+            document.getElementById('badge-track').innerText = track.toUpperCase();
+
+            document.getElementById('success-modal').classList.remove('hidden');
+        }
+
+        function resetRegistration() {
+            document.getElementById('success-modal').classList.add('hidden');
+            document.getElementById('reg-form').reset();
+        }
+    </script>
+
+</body>
+</html>
